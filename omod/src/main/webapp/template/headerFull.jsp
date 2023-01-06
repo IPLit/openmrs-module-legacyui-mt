@@ -3,6 +3,8 @@
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 <%@ page import="org.openmrs.web.WebConstants" %>
+<%@ page import="org.openmrs.util.OpenmrsConstants" %>
+
 <%
 	pageContext.setAttribute("msg", session.getAttribute(WebConstants.OPENMRS_MSG_ATTR));
 	pageContext.setAttribute("msgArgs", session.getAttribute(WebConstants.OPENMRS_MSG_ARGS));
@@ -12,6 +14,14 @@
 	session.removeAttribute(WebConstants.OPENMRS_MSG_ARGS);
 	session.removeAttribute(WebConstants.OPENMRS_ERROR_ATTR);
 	session.removeAttribute(WebConstants.OPENMRS_ERROR_ARGS);
+
+	String tenantId = (String) session.getAttribute(OpenmrsConstants.TENANT_HEADER_NAME);
+	if (tenantId != null && tenantId.trim().length() != 0 && !tenantId.equals(OpenmrsConstants.DATABASE_NAME)) {
+		tenantId = tenantId.replace(OpenmrsConstants.TENANT_DB_PREFIX, "");
+		pageContext.setAttribute("tenantIdStr", tenantId);
+	} else {
+		pageContext.setAttribute("tenantIdStr", OpenmrsConstants.DATABASE_NAME);
+	}
 %>
 
 <html xmlns="http://www.w3.org/1999/xhtml" 
@@ -101,7 +111,7 @@
 			<openmrs:authentication>
 				<c:if test="${authenticatedUser != null}">
 					<span id="userLoggedInAs" class="firstChild">
-						<openmrs:message code="header.logged.in"/> <c:out value="${authenticatedUser.personName}" />
+						<openmrs:message code="header.logged.in"/> <c:out value="${authenticatedUser.personName}" /> to <strong><c:out value="${tenantIdStr}"/></strong>
 					</span>
 					<span id="userLogout">
 						<a href='${pageContext.request.contextPath}/ms/logout'><openmrs:message code="header.logout" /></a>

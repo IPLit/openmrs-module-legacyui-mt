@@ -39,6 +39,10 @@ import org.openmrs.web.WebUtil;
 import org.openmrs.web.user.CurrentUsers;
 import org.openmrs.web.user.UserProperties;
 
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 /**
  * This servlet accepts the username and password from the login form and authenticates the user to
  * OpenMRS
@@ -68,6 +72,21 @@ public class LoginServlet extends HttpServlet {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		HttpSession httpSession = request.getSession();
+		
+		// MT IPLit
+		String userdb = request.getParameter("udb");
+		if (userdb == null || userdb.trim().length() == 0) {
+			throw new ContextAuthenticationException("Unable to authenticate without db selection");
+		} else {
+			log.debug("OpenmrsConstants.TENANT_HEADER_NAME: " + userdb);
+			httpSession.setAttribute(OpenmrsConstants.TENANT_HEADER_NAME, userdb.trim());
+			RequestAttributes reqAttrs = RequestContextHolder.getRequestAttributes();
+			if (reqAttrs == null) {
+				reqAttrs = new ServletRequestAttributes(request);
+			}
+			reqAttrs.setAttribute(OpenmrsConstants.TENANT_HEADER_NAME, userdb, RequestAttributes.SCOPE_REQUEST);
+			RequestContextHolder.setRequestAttributes(reqAttrs, true);
+		}
 		
 		String ipAddress = request.getRemoteAddr();
 		Integer loginAttempts = loginAttemptsByIP.get(ipAddress);
